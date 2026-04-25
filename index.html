@@ -565,7 +565,7 @@
             <div class="card">
                 <div class="card-title">Google Sheets Sync</div>
                 <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 20px;">
-                    Connect to Google Sheets via Apps Script for cross-device sync.
+                    Auto-sync is enabled. Data pushes to Sheets automatically after changes, and pulls on page load. Manual buttons below as fallback.
                 </p>
                 <div class="sheets-config">
                     <div class="field">
@@ -600,7 +600,10 @@
         };
 
         // ---- INIT ----
-        function init() {
+        let syncTimer = null;
+        let isSyncing = false;
+
+        async function init() {
             loadLocal();
             renderAccessories('push');
             renderAccessories('pull');
@@ -613,7 +616,103 @@
             renderMissLog();
             if (state.appsScriptUrl) {
                 document.getElementById('appsScriptUrl').value = state.appsScriptUrl;
-                updateSyncStatus('connected', 'Connected');
+                // Auto-pull from Sheets on load
+                await autoLoadFromSheets();
+            }
+        }
+
+        // Auto-pull: silently loads from Sheets when app opens
+        async function autoLoadFromSheets() {
+            const url = state.appsScriptUrl;
+            if (!url) return;
+
+            updateSyncStatus('syncing', 'Syncing...');
+
+            try {
+                const res = await fetch(url + '?action=load');
+                const data = await res.json();
+
+                if (data.status === 'success' && data.plan) {
+                    if (data.config) {
+                        state.pullupReps = data.config.pullupReps || 4;
+                        state.fiveKPace = data.config.fiveKPace || '7:40';
+                        state.pushAccessories = data.config.pushAccessories || [];
+                        state.pullAccessories = data.config.pullAccessories || [];
+                        state.legAccessories = data.config.legAccessories || [];
+                        document.getElementById('pullupReps').value = state.pullupReps;
+                        document.getElementById('fiveKPace').value = state.fiveKPace;
+                        renderAccessories('push');
+                        renderAccessories('pull');
+                        renderAccessories('leg');
+                    }
+                    if (data.plan) {
+                        state.plan = data.plan;
+                        renderPlanTable();
+                        populateWeekSelector();
+                        renderLongRunChart();
+                    }
+                    if (data.misses) {
+                        state.misses = data.misses;
+                        renderMissLog();
+                    }
+                    saveLocal();
+                    updateSyncStatus('connected', 'Synced');
+                } else {
+                    updateSyncStatus('connected', 'Connected');
+                }
+            } catch (err) {
+                // Silent fail on auto-load — local data is fine
+                updateSyncStatus('error', 'Offline');
+            }
+        }
+
+        // Auto-push: debounced — waits 2s after last change, then pushes
+        function scheduleAutoSync() {
+            if (!state.appsScriptUrl) return;
+            if (syncTimer) clearTimeout(syncTimer);
+            syncTimer = setTimeout(() => autoSyncToSheets(), 2000);
+        }
+
+        async function autoSyncToSheets() {
+            if (isSyncing || !state.appsScriptUrl) return;
+            isSyncing = true;
+            updateSyncStatus('syncing', 'Saving...');
+
+            try {
+                const payload = {
+                    action: 'save',
+                    config: {
+                        benchStart: 185, benchGoal: 225,
+                        ohpStart: 100, ohpGoal: 135,
+                        rowStart: 155, rowGoal: 190,
+                        squatStart: 225, squatGoal: 325,
+                        pullupReps: state.pullupReps,
+                        fiveKPace: state.fiveKPace,
+                        pushAccessories: state.pushAccessories,
+                        pullAccessories: state.pullAccessories,
+                        legAccessories: state.legAccessories
+                    },
+                    plan: state.plan,
+                    misses: state.misses,
+                    cycleNumber: 1
+                };
+
+                const res = await fetch(state.appsScriptUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (data.status === 'success') {
+                    updateSyncStatus('connected', 'Synced');
+                } else {
+                    updateSyncStatus('error', 'Sync failed');
+                }
+            } catch (err) {
+                updateSyncStatus('error', 'Offline');
+            } finally {
+                isSyncing = false;
             }
         }
 
@@ -625,6 +724,7 @@
             state.pullAccessories = getAccessoryValues('pull');
             state.legAccessories = getAccessoryValues('leg');
             localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            scheduleAutoSync();
         }
 
         function loadLocal() {
@@ -702,6 +802,7 @@
             renderLongRunChart();
             switchTab('plan');
             toast('Plan generated.', 'success');
+            scheduleAutoSync();
         }
 
         function getWeight(start, end, week, isDeload) {
@@ -877,6 +978,7 @@
             document.getElementById('missWeek').value = '';
             document.getElementById('missCount').value = '';
             toast('Miss logged.', 'success');
+            scheduleAutoSync();
         }
 
         function renderMissLog() {
@@ -900,6 +1002,7 @@
             delete state.misses[key];
             saveLocal();
             renderMissLog();
+            scheduleAutoSync();
         }
 
         // ---- LONG RUN CHART ----
