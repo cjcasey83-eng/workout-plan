@@ -1,0 +1,1086 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>16-Week Workout Plan</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f1117;
+            --surface: #1a1d27;
+            --surface2: #242833;
+            --border: #2e3340;
+            --text: #e4e4e7;
+            --text-dim: #8b8d97;
+            --accent: #6366f1;
+            --accent-light: #818cf8;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --green: #22c55e;
+            --green-dim: rgba(34, 197, 94, 0.12);
+            --orange: #f59e0b;
+            --orange-dim: rgba(245, 158, 11, 0.12);
+            --red: #ef4444;
+            --red-dim: rgba(239, 68, 68, 0.12);
+            --pink: #ec4899;
+            --pink-dim: rgba(236, 72, 153, 0.12);
+            --mono: 'JetBrains Mono', monospace;
+            --sans: 'DM Sans', sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: var(--sans);
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .app {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .header h1 span { color: var(--accent-light); }
+
+        .sync-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-family: var(--mono);
+            color: var(--text-dim);
+        }
+
+        .sync-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+        }
+
+        .sync-dot.error { background: var(--red); }
+        .sync-dot.syncing { background: var(--orange); animation: pulse 1s infinite; }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab {
+            padding: 10px 18px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-dim);
+            font-size: 13px;
+            font-weight: 500;
+            font-family: var(--sans);
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+
+        .tab:hover { border-color: var(--accent); color: var(--text); }
+        .tab.active { background: var(--accent); border-color: var(--accent); color: white; }
+
+        .panel { display: none; }
+        .panel.active { display: block; }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            margin-bottom: 16px;
+        }
+
+        .grid { display: grid; gap: 16px; }
+        .grid-2 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+        .grid-3 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+
+        .field label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-dim);
+            margin-bottom: 6px;
+        }
+
+        .field input, .field select {
+            width: 100%;
+            padding: 10px 12px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 14px;
+            font-family: var(--mono);
+            transition: border-color 0.2s;
+        }
+
+        .field input:focus, .field select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .field input:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .exercise-list { display: flex; flex-direction: column; gap: 8px; }
+
+        .exercise-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .exercise-row input {
+            flex: 1;
+            padding: 8px 12px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 13px;
+            font-family: var(--sans);
+        }
+
+        .exercise-row input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            font-family: var(--sans);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn:active { transform: scale(0.97); }
+
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-light); }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        .btn-danger { background: var(--red-dim); color: var(--red); border: 1px solid rgba(239,68,68,0.2); }
+        .btn-danger:hover { background: rgba(239,68,68,0.2); }
+
+        .btn-ghost { background: transparent; color: var(--text-dim); border: 1px solid var(--border); }
+        .btn-ghost:hover { border-color: var(--accent); color: var(--text); }
+
+        .btn-add { background: var(--accent-glow); color: var(--accent-light); border: 1px dashed var(--accent); }
+        .btn-add:hover { background: rgba(99,102,241,0.25); }
+
+        .btn-sync { background: var(--green-dim); color: var(--green); border: 1px solid rgba(34,197,94,0.2); }
+        .btn-sync:hover { background: rgba(34,197,94,0.2); }
+
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+
+        /* Spreadsheet */
+        .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+            font-family: var(--mono);
+        }
+
+        th {
+            background: var(--surface2);
+            padding: 10px 12px;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-dim);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            font-size: 12px;
+        }
+
+        tr.lift { background: var(--orange-dim); }
+        tr.run { background: var(--green-dim); }
+        tr.rest { background: var(--surface); }
+        tr.deload { background: var(--pink-dim); }
+
+        tr:hover { filter: brightness(1.1); }
+
+        .week-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 11px;
+        }
+
+        .week-badge.normal { background: var(--accent-glow); color: var(--accent-light); }
+        .week-badge.deload { background: var(--pink-dim); color: var(--pink); }
+
+        /* Weekly view */
+        .week-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 16px;
+        }
+
+        .day-card {
+            background: var(--surface2);
+            border-radius: 10px;
+            padding: 16px;
+            border-left: 3px solid var(--accent);
+        }
+
+        .day-card.run { border-left-color: var(--green); }
+        .day-card.lift { border-left-color: var(--orange); }
+        .day-card.rest { border-left-color: var(--text-dim); }
+
+        .day-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .workout-entry {
+            padding: 8px 10px;
+            background: var(--surface);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .workout-entry .name {
+            font-weight: 600;
+            color: var(--accent-light);
+            margin-bottom: 4px;
+        }
+
+        .workout-entry .detail {
+            color: var(--text-dim);
+            font-family: var(--mono);
+            font-size: 11px;
+        }
+
+        /* Miss tracker */
+        .miss-form {
+            display: grid;
+            grid-template-columns: 1fr 80px 100px auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        .miss-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            background: var(--surface2);
+            border-left: 3px solid var(--orange);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .miss-entry.severe { border-left-color: var(--red); }
+
+        /* Long run chart */
+        .lr-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 6px;
+            height: 260px;
+            padding: 30px 10px 30px 10px;
+        }
+
+        .lr-bar {
+            flex: 1;
+            background: linear-gradient(180deg, var(--accent) 0%, var(--accent-light) 100%);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            min-width: 16px;
+            transition: height 0.5s ease;
+        }
+
+        .lr-bar.deload {
+            background: linear-gradient(180deg, var(--pink) 0%, rgba(236,72,153,0.5) 100%);
+        }
+
+        .lr-label {
+            position: absolute;
+            bottom: -22px;
+            width: 100%;
+            text-align: center;
+            font-size: 9px;
+            font-family: var(--mono);
+            color: var(--text-dim);
+        }
+
+        .lr-value {
+            position: absolute;
+            top: -20px;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            font-family: var(--mono);
+            font-weight: 600;
+            color: var(--accent-light);
+        }
+
+        /* Sheets URL config */
+        .sheets-config {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .sheets-config .field { flex: 1; min-width: 200px; }
+
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 100;
+            display: none;
+            animation: slideUp 0.3s ease;
+        }
+
+        .toast.success { border-color: var(--green); color: var(--green); }
+        .toast.error { border-color: var(--red); color: var(--red); }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @media (max-width: 640px) {
+            .app { padding: 12px; }
+            .header h1 { font-size: 18px; }
+            .card { padding: 16px; }
+            .miss-form { grid-template-columns: 1fr; }
+            .week-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <h1>16-Week <span>Workout Plan</span></h1>
+            <div class="sync-status">
+                <div class="sync-dot" id="syncDot"></div>
+                <span id="syncText">Not connected</span>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('setup')">Setup</button>
+            <button class="tab" onclick="switchTab('plan')">16-Week Plan</button>
+            <button class="tab" onclick="switchTab('weekly')">Weekly</button>
+            <button class="tab" onclick="switchTab('misses')">Misses</button>
+            <button class="tab" onclick="switchTab('longrun')">Long Run</button>
+            <button class="tab" onclick="switchTab('sync')">Sync</button>
+        </div>
+
+        <!-- SETUP -->
+        <div id="setup" class="panel active">
+            <div class="card">
+                <div class="card-title">Progression Targets (16 Weeks)</div>
+                <div class="grid grid-2">
+                    <div class="field">
+                        <label>Bench Press (Start → Goal)</label>
+                        <input type="text" value="185 → 225 lbs" disabled>
+                    </div>
+                    <div class="field">
+                        <label>Overhead Press (Start → Goal)</label>
+                        <input type="text" value="100 → 135 lbs" disabled>
+                    </div>
+                    <div class="field">
+                        <label>Bent Over Row (Start → Goal)</label>
+                        <input type="text" value="155 → 190 lbs" disabled>
+                    </div>
+                    <div class="field">
+                        <label>Back Squat (Start → Goal)</label>
+                        <input type="text" value="225 → 325 lbs" disabled>
+                    </div>
+                    <div class="field">
+                        <label>Pull-ups (bodyweight reps)</label>
+                        <input type="number" id="pullupReps" value="4">
+                    </div>
+                    <div class="field">
+                        <label>5K Pace (mm:ss)</label>
+                        <input type="text" id="fiveKPace" value="7:40">
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Leg Day Accessories (Monday)</div>
+                <div class="exercise-list" id="legAccessories"></div>
+                <button class="btn btn-add btn-sm" onclick="addExercise('leg')" style="margin-top: 10px;">+ Add Exercise</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Push Day Accessories (Wednesday)</div>
+                <div class="exercise-list" id="pushAccessories"></div>
+                <button class="btn btn-add btn-sm" onclick="addExercise('push')" style="margin-top: 10px;">+ Add Exercise</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Pull Day Accessories (Friday)</div>
+                <div class="exercise-list" id="pullAccessories"></div>
+                <button class="btn btn-add btn-sm" onclick="addExercise('pull')" style="margin-top: 10px;">+ Add Exercise</button>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="generatePlan()">Generate 16-Week Plan</button>
+                <button class="btn btn-danger" onclick="resetPlan()">Reset Everything</button>
+            </div>
+        </div>
+
+        <!-- 16-WEEK PLAN -->
+        <div id="plan" class="panel">
+            <div class="card">
+                <div class="card-title">Full Training Schedule</div>
+                <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 16px;">Weeks 4, 8, 12, 16 = deload (85%). Progression: 2.5 lbs/week.</p>
+                <div class="table-wrap" id="planTable"></div>
+            </div>
+        </div>
+
+        <!-- WEEKLY -->
+        <div id="weekly" class="panel">
+            <div class="card">
+                <div class="card-title">Weekly View</div>
+                <div class="field" style="max-width: 200px; margin-bottom: 20px;">
+                    <label>Select Week</label>
+                    <select id="weekSelector" onchange="renderWeekly()"></select>
+                </div>
+                <div id="weeklyGrid"></div>
+            </div>
+        </div>
+
+        <!-- MISSES -->
+        <div id="misses" class="panel">
+            <div class="card">
+                <div class="card-title">Log Missed Reps</div>
+                <p style="font-size: 12px; color: var(--text-dim); margin-bottom: 16px;">2+ misses on the same lift → auto 10% deload next occurrence.</p>
+                <div class="miss-form">
+                    <div class="field">
+                        <label>Exercise</label>
+                        <select id="missExercise">
+                            <option value="">Select...</option>
+                            <option value="bench">Bench Press</option>
+                            <option value="ohp">Overhead Press</option>
+                            <option value="row">Bent Over Row</option>
+                            <option value="squat">Back Squat</option>
+                        </select>
+                    </div>
+                    <div class="field">
+                        <label>Week</label>
+                        <input type="number" id="missWeek" min="1" max="16" placeholder="1-16">
+                    </div>
+                    <div class="field">
+                        <label>Reps Missed</label>
+                        <input type="number" id="missCount" min="1" placeholder="#">
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="logMiss()" style="margin-bottom: 2px;">Log</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Miss History</div>
+                <div id="missLog"></div>
+            </div>
+        </div>
+
+        <!-- LONG RUN -->
+        <div id="longrun" class="panel">
+            <div class="card">
+                <div class="card-title">Long Run Progression (7mi → 13mi)</div>
+                <div class="lr-chart" id="lrChart"></div>
+            </div>
+        </div>
+
+        <!-- SYNC -->
+        <div id="sync" class="panel">
+            <div class="card">
+                <div class="card-title">Google Sheets Sync</div>
+                <p style="font-size: 13px; color: var(--text-dim); margin-bottom: 20px;">
+                    Connect to Google Sheets via Apps Script for cross-device sync.
+                </p>
+                <div class="sheets-config">
+                    <div class="field">
+                        <label>Apps Script Web App URL</label>
+                        <input type="text" id="appsScriptUrl" placeholder="https://script.google.com/macros/s/...">
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="saveAppsScriptUrl()" style="margin-bottom: 2px;">Save URL</button>
+                </div>
+                <div class="btn-group" style="margin-top: 20px;">
+                    <button class="btn btn-sync" onclick="syncToSheets()">↑ Push to Sheets</button>
+                    <button class="btn btn-sync" onclick="loadFromSheets()">↓ Pull from Sheets</button>
+                    <button class="btn btn-ghost" onclick="testConnection()">Test Connection</button>
+                </div>
+                <div id="syncLog" style="margin-top: 20px; font-size: 12px; font-family: var(--mono); color: var(--text-dim);"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const STORAGE_KEY = 'workoutPlanV3';
+        let state = {
+            pullupReps: 4,
+            fiveKPace: '7:40',
+            pushAccessories: [],
+            pullAccessories: [],
+            legAccessories: [],
+            plan: null,
+            misses: {},
+            appsScriptUrl: ''
+        };
+
+        // ---- INIT ----
+        function init() {
+            loadLocal();
+            renderAccessories('push');
+            renderAccessories('pull');
+            renderAccessories('leg');
+            if (state.plan) {
+                renderPlanTable();
+                populateWeekSelector();
+                renderLongRunChart();
+            }
+            renderMissLog();
+            if (state.appsScriptUrl) {
+                document.getElementById('appsScriptUrl').value = state.appsScriptUrl;
+                updateSyncStatus('connected', 'Connected');
+            }
+        }
+
+        // ---- LOCAL STORAGE ----
+        function saveLocal() {
+            state.pullupReps = parseInt(document.getElementById('pullupReps').value) || 4;
+            state.fiveKPace = document.getElementById('fiveKPace').value || '7:40';
+            state.pushAccessories = getAccessoryValues('push');
+            state.pullAccessories = getAccessoryValues('pull');
+            state.legAccessories = getAccessoryValues('leg');
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function loadLocal() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                state = { ...state, ...JSON.parse(saved) };
+                document.getElementById('pullupReps').value = state.pullupReps;
+                document.getElementById('fiveKPace').value = state.fiveKPace;
+            }
+        }
+
+        function getAccessoryValues(day) {
+            return Array.from(document.querySelectorAll(`#${day}Accessories .exercise-row input`))
+                .map(el => el.value).filter(v => v.trim());
+        }
+
+        // ---- TABS ----
+        function switchTab(name) {
+            document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(name).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        // ---- ACCESSORIES ----
+        function renderAccessories(day) {
+            const container = document.getElementById(`${day}Accessories`);
+            const list = state[`${day}Accessories`] || [];
+            container.innerHTML = list.map((ex, i) => `
+                <div class="exercise-row">
+                    <input type="text" value="${ex}" onchange="saveLocal()">
+                    <button class="btn btn-danger btn-sm" onclick="removeExercise('${day}', ${i})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function addExercise(day) {
+            state[`${day}Accessories`].push('');
+            renderAccessories(day);
+            const inputs = document.querySelectorAll(`#${day}Accessories .exercise-row input`);
+            inputs[inputs.length - 1].focus();
+        }
+
+        function removeExercise(day, idx) {
+            state[`${day}Accessories`].splice(idx, 1);
+            renderAccessories(day);
+            saveLocal();
+        }
+
+        // ---- PLAN GENERATION ----
+        function generatePlan() {
+            saveLocal();
+
+            const targets = {
+                bench: { start: 185, end: 225 },
+                ohp: { start: 100, end: 135 },
+                row: { start: 155, end: 190 },
+                squat: { start: 225, end: 325 }
+            };
+
+            const plan = { weeks: [] };
+
+            for (let w = 1; w <= 16; w++) {
+                plan.weeks.push({
+                    week: w,
+                    isDeload: w % 4 === 0,
+                    days: buildWeek(w, targets)
+                });
+            }
+
+            state.plan = plan;
+            saveLocal();
+            renderPlanTable();
+            populateWeekSelector();
+            renderLongRunChart();
+            switchTab('plan');
+            toast('Plan generated.', 'success');
+        }
+
+        function getWeight(start, end, week, isDeload) {
+            const w = start + ((end - start) / 16) * (week - 1);
+            return Math.round(isDeload ? w * 0.85 : w);
+        }
+
+        function buildWeek(week, targets) {
+            const dl = week % 4 === 0;
+            const pu = state.pullupReps;
+            const puVol = Math.min(pu + Math.floor((week - 1) / 4), pu + 3);
+            const puStr = Math.max(3, puVol - 1);
+
+            const accReps = dl ? '10-12' : '8-12';
+            const accSets = dl ? 2 : 3;
+
+            const pushAcc = state.pushAccessories.filter(e => e.trim());
+            const pullAcc = state.pullAccessories.filter(e => e.trim());
+            const legAcc = state.legAccessories.filter(e => e.trim());
+
+            const intervals = [
+                { name: '4×4 min VO2', notes: '4 min hard / 4 min easy' },
+                { name: '6×800m @5K', notes: '800m reps, 2 min recovery' },
+                { name: 'Fartlek Tempo', notes: '20-30 min varied pace' },
+                { name: 'Recovery Run', notes: '30-40 min easy (deload)' },
+                { name: '5×3 min VO2', notes: '3 min hard / 3 min easy' },
+                { name: '8×800m @5K', notes: '800m reps, 90s recovery' },
+                { name: '6×2 min Strength', notes: '2 min @10K pace / 2 min easy' },
+                { name: 'Recovery Run', notes: '30-40 min easy (deload)' },
+                { name: '3×2mi Strength', notes: '2mi repeats @HM pace' },
+                { name: '400-800-1200 Ladder', notes: 'Up & down, equal recovery' },
+                { name: 'Mixed 6×(600+800)', notes: '2 min recovery between' },
+                { name: 'Recovery Run', notes: '30-40 min easy (deload)' },
+                { name: '4× HM pace', notes: '2 min recovery' },
+                { name: 'Tempo + Surges', notes: '15 min tempo + 4×1 min @5K' },
+                { name: '6×3 min VO2', notes: '2 min recovery' },
+                { name: '5×800m @5K', notes: 'Sharpening' }
+            ];
+
+            const longDist = Math.round((7 + (13 - 7) * (week / 16)) * 2) / 2;
+            const iv = intervals[week - 1];
+
+            return [
+                // Monday: Legs
+                {
+                    dayName: 'Monday', type: 'lift',
+                    workouts: [
+                        { name: 'Back Squat', sets: dl ? 3 : 4, reps: '5-6', weight: getWeight(targets.squat.start, targets.squat.end, week, dl), notes: dl ? 'deload' : '' },
+                        { name: 'Pull-ups (Volume)', sets: 3, reps: puVol, weight: 'BW', notes: 'max reps' },
+                        { name: 'Leg Lifts / Sled', sets: 3, reps: '12-15', weight: 'fatigue', notes: '' },
+                        { name: 'Nordic Curls', sets: 3, reps: '5-8', weight: 'BW', notes: '' },
+                        ...legAcc.map(e => ({ name: e, sets: accSets, reps: accReps, weight: 'prescribed', notes: '' }))
+                    ]
+                },
+                // Tuesday: Z2
+                {
+                    dayName: 'Tuesday', type: 'run',
+                    workouts: [{ name: 'Zone 2 Steady', distance: '5-7 mi', pace: 'Z2', notes: '' }]
+                },
+                // Wednesday: Push
+                {
+                    dayName: 'Wednesday', type: 'lift',
+                    workouts: [
+                        { name: 'Bench Press', sets: dl ? 3 : 4, reps: dl ? '6-8' : '5-6', weight: getWeight(targets.bench.start, targets.bench.end, week, dl), notes: dl ? 'deload' : '' },
+                        { name: 'Overhead Press', sets: dl ? 3 : 4, reps: dl ? '6-8' : '5-6', weight: getWeight(targets.ohp.start, targets.ohp.end, week, dl), notes: dl ? 'deload' : '' },
+                        ...pushAcc.map(e => ({ name: e, sets: accSets, reps: accReps, weight: 'prescribed', notes: '' }))
+                    ]
+                },
+                // Thursday: Intervals
+                {
+                    dayName: 'Thursday', type: 'run',
+                    workouts: [{ name: iv.name, distance: 'varies', pace: 'Mixed', notes: iv.notes }]
+                },
+                // Friday: Pull
+                {
+                    dayName: 'Friday', type: 'lift',
+                    workouts: [
+                        { name: 'Bent Over Row', sets: dl ? 3 : 4, reps: dl ? '6-8' : '5-6', weight: getWeight(targets.row.start, targets.row.end, week, dl), notes: dl ? 'deload' : '' },
+                        { name: 'Pull-ups (Strength)', sets: 3, reps: puStr, weight: '+5-10 lbs', notes: 'dip belt' },
+                        ...pullAcc.map(e => ({ name: e, sets: accSets, reps: accReps, weight: 'prescribed', notes: '' }))
+                    ]
+                },
+                // Saturday: Long run
+                {
+                    dayName: 'Saturday', type: 'run',
+                    workouts: [{ name: 'Long Run', distance: longDist + ' mi', pace: 'Zone 2', notes: '' }]
+                },
+                // Sunday: Rest
+                {
+                    dayName: 'Sunday', type: 'rest',
+                    workouts: [{ name: 'Complete Rest', notes: '' }]
+                }
+            ];
+        }
+
+        // ---- RENDER PLAN TABLE ----
+        function renderPlanTable() {
+            if (!state.plan) return;
+            let html = '<table><thead><tr><th>Wk</th><th>Day</th><th>Exercise</th><th>Rx</th></tr></thead><tbody>';
+
+            state.plan.weeks.forEach(week => {
+                week.days.forEach((day, dIdx) => {
+                    day.workouts.forEach((w, wIdx) => {
+                        const cls = week.isDeload ? 'deload' : day.type;
+                        html += `<tr class="${cls}">`;
+
+                        if (dIdx === 0 && wIdx === 0) {
+                            const totalRows = week.days.reduce((sum, d) => sum + d.workouts.length, 0);
+                            const badgeClass = week.isDeload ? 'deload' : 'normal';
+                            html += `<td rowspan="${totalRows}"><span class="week-badge ${badgeClass}">W${week.week}</span></td>`;
+                        }
+
+                        if (wIdx === 0) {
+                            html += `<td rowspan="${day.workouts.length}">${day.dayName}</td>`;
+                        }
+
+                        html += `<td>${w.name || ''}</td><td>`;
+                        if (w.sets) html += `${w.sets}×${w.reps} @ ${w.weight}`;
+                        if (w.distance) html += `${w.distance} ${w.pace || ''}`;
+                        if (w.notes) html += ` <span style="color:var(--text-dim)">${w.notes}</span>`;
+                        html += `</td></tr>`;
+                    });
+                });
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('planTable').innerHTML = html;
+        }
+
+        // ---- WEEKLY VIEW ----
+        function populateWeekSelector() {
+            if (!state.plan) return;
+            document.getElementById('weekSelector').innerHTML = state.plan.weeks.map(w =>
+                `<option value="${w.week}">Week ${w.week}${w.isDeload ? ' (Deload)' : ''}</option>`
+            ).join('');
+            renderWeekly();
+        }
+
+        function renderWeekly() {
+            if (!state.plan) return;
+            const wk = parseInt(document.getElementById('weekSelector').value);
+            const week = state.plan.weeks.find(w => w.week === wk);
+            if (!week) return;
+
+            let html = '<div class="week-grid">';
+            week.days.forEach(day => {
+                html += `<div class="day-card ${day.type}"><h3>${day.dayName}</h3>`;
+                day.workouts.forEach(w => {
+                    html += `<div class="workout-entry"><div class="name">${w.name || ''}</div><div class="detail">`;
+                    if (w.sets) html += `${w.sets}×${w.reps} @ ${w.weight}`;
+                    if (w.distance) html += `${w.distance} ${w.pace || ''}`;
+                    if (w.notes) html += ` — ${w.notes}`;
+                    html += `</div></div>`;
+                });
+                html += '</div>';
+            });
+            html += '</div>';
+            document.getElementById('weeklyGrid').innerHTML = html;
+        }
+
+        // ---- MISS TRACKER ----
+        function logMiss() {
+            const ex = document.getElementById('missExercise').value;
+            const wk = parseInt(document.getElementById('missWeek').value);
+            const ct = parseInt(document.getElementById('missCount').value);
+            if (!ex || !wk || !ct) { toast('Fill in all fields.', 'error'); return; }
+
+            const key = `${ex}-${wk}`;
+            state.misses[key] = (state.misses[key] || 0) + ct;
+            saveLocal();
+            renderMissLog();
+            document.getElementById('missExercise').value = '';
+            document.getElementById('missWeek').value = '';
+            document.getElementById('missCount').value = '';
+            toast('Miss logged.', 'success');
+        }
+
+        function renderMissLog() {
+            const container = document.getElementById('missLog');
+            const entries = Object.entries(state.misses);
+            if (!entries.length) {
+                container.innerHTML = '<p style="color: var(--text-dim); font-size: 13px;">No misses logged yet.</p>';
+                return;
+            }
+            container.innerHTML = entries.map(([key, count]) => {
+                const [ex, wk] = key.split('-');
+                const severe = count >= 2;
+                return `<div class="miss-entry ${severe ? 'severe' : ''}">
+                    <span><strong>${ex}</strong> — Week ${wk}: ${count} reps missed ${severe ? '⚠️ Deload next' : ''}</span>
+                    <button class="btn btn-danger btn-sm" onclick="clearMiss('${key}')">×</button>
+                </div>`;
+            }).join('');
+        }
+
+        function clearMiss(key) {
+            delete state.misses[key];
+            saveLocal();
+            renderMissLog();
+        }
+
+        // ---- LONG RUN CHART ----
+        function renderLongRunChart() {
+            if (!state.plan) return;
+            let html = '';
+            state.plan.weeks.forEach(week => {
+                const lr = week.days.find(d => d.dayName === 'Saturday');
+                const m = lr.workouts[0].distance.match(/([\d.]+)/);
+                const dist = parseFloat(m[1]);
+                const pct = (dist / 13) * 100;
+                const cls = week.isDeload ? 'lr-bar deload' : 'lr-bar';
+                html += `<div class="${cls}" style="height:${pct}%">
+                    <div class="lr-value">${dist}</div>
+                    <div class="lr-label">W${week.week}</div>
+                </div>`;
+            });
+            document.getElementById('lrChart').innerHTML = html;
+        }
+
+        // ---- GOOGLE SHEETS SYNC ----
+        function saveAppsScriptUrl() {
+            state.appsScriptUrl = document.getElementById('appsScriptUrl').value.trim();
+            saveLocal();
+            updateSyncStatus('connected', 'URL saved');
+            toast('Apps Script URL saved.', 'success');
+        }
+
+        function updateSyncStatus(type, text) {
+            const dot = document.getElementById('syncDot');
+            const label = document.getElementById('syncText');
+            dot.className = 'sync-dot' + (type === 'error' ? ' error' : type === 'syncing' ? ' syncing' : '');
+            label.textContent = text;
+        }
+
+        function appendSyncLog(msg) {
+            const log = document.getElementById('syncLog');
+            const time = new Date().toLocaleTimeString();
+            log.innerHTML += `<div>[${time}] ${msg}</div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+
+        async function testConnection() {
+            const url = state.appsScriptUrl;
+            if (!url) { toast('Enter your Apps Script URL first.', 'error'); return; }
+
+            updateSyncStatus('syncing', 'Testing...');
+            appendSyncLog('Testing connection...');
+
+            try {
+                const res = await fetch(url + '?action=ping');
+                const data = await res.json();
+                if (data.status === 'ok') {
+                    updateSyncStatus('connected', 'Connected');
+                    appendSyncLog('✓ Connection successful.');
+                    toast('Connected!', 'success');
+                } else {
+                    throw new Error('Bad response');
+                }
+            } catch (err) {
+                updateSyncStatus('error', 'Connection failed');
+                appendSyncLog('✗ Connection failed: ' + err.message);
+                toast('Connection failed.', 'error');
+            }
+        }
+
+        async function syncToSheets() {
+            const url = state.appsScriptUrl;
+            if (!url) { toast('Enter your Apps Script URL first.', 'error'); return; }
+
+            saveLocal();
+            updateSyncStatus('syncing', 'Pushing...');
+            appendSyncLog('Pushing data to Google Sheets...');
+
+            try {
+                const payload = {
+                    action: 'save',
+                    config: {
+                        benchStart: 185, benchGoal: 225,
+                        ohpStart: 100, ohpGoal: 135,
+                        rowStart: 155, rowGoal: 190,
+                        squatStart: 225, squatGoal: 325,
+                        pullupReps: state.pullupReps,
+                        fiveKPace: state.fiveKPace,
+                        pushAccessories: state.pushAccessories,
+                        pullAccessories: state.pullAccessories,
+                        legAccessories: state.legAccessories
+                    },
+                    plan: state.plan,
+                    misses: state.misses,
+                    cycleNumber: 1
+                };
+
+                const res = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await res.json();
+                if (data.status === 'success') {
+                    updateSyncStatus('connected', 'Synced');
+                    appendSyncLog('✓ Data pushed to Sheets.');
+                    toast('Pushed to Sheets!', 'success');
+                } else {
+                    throw new Error(data.message || 'Unknown error');
+                }
+            } catch (err) {
+                updateSyncStatus('error', 'Push failed');
+                appendSyncLog('✗ Push failed: ' + err.message);
+                toast('Push failed.', 'error');
+            }
+        }
+
+        async function loadFromSheets() {
+            const url = state.appsScriptUrl;
+            if (!url) { toast('Enter your Apps Script URL first.', 'error'); return; }
+
+            updateSyncStatus('syncing', 'Pulling...');
+            appendSyncLog('Pulling data from Google Sheets...');
+
+            try {
+                const res = await fetch(url + '?action=load');
+                const data = await res.json();
+
+                if (data.status === 'success') {
+                    if (data.config) {
+                        state.pullupReps = data.config.pullupReps || 4;
+                        state.fiveKPace = data.config.fiveKPace || '7:40';
+                        state.pushAccessories = data.config.pushAccessories || [];
+                        state.pullAccessories = data.config.pullAccessories || [];
+                        state.legAccessories = data.config.legAccessories || [];
+                        document.getElementById('pullupReps').value = state.pullupReps;
+                        document.getElementById('fiveKPace').value = state.fiveKPace;
+                        renderAccessories('push');
+                        renderAccessories('pull');
+                        renderAccessories('leg');
+                    }
+
+                    if (data.plan) {
+                        state.plan = data.plan;
+                        renderPlanTable();
+                        populateWeekSelector();
+                        renderLongRunChart();
+                    }
+
+                    if (data.misses) {
+                        state.misses = data.misses;
+                        renderMissLog();
+                    }
+
+                    saveLocal();
+                    updateSyncStatus('connected', 'Synced');
+                    appendSyncLog('✓ Data pulled from Sheets.');
+                    toast('Pulled from Sheets!', 'success');
+                } else {
+                    throw new Error(data.message || 'Unknown error');
+                }
+            } catch (err) {
+                updateSyncStatus('error', 'Pull failed');
+                appendSyncLog('✗ Pull failed: ' + err.message);
+                toast('Pull failed.', 'error');
+            }
+        }
+
+        // ---- UTILITIES ----
+        function resetPlan() {
+            if (!confirm('Reset everything? This deletes all local data.')) return;
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        }
+
+        function toast(msg, type) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.className = `toast ${type}`;
+            el.style.display = 'block';
+            setTimeout(() => { el.style.display = 'none'; }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
