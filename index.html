@@ -901,6 +901,48 @@
         // ---- RENDER PLAN TABLE ----
         function renderPlanTable() {
             if (!state.plan) return;
+            const container = document.getElementById('planTable');
+
+            // Detect mobile
+            const isMobile = window.innerWidth < 640;
+
+            if (isMobile) {
+                renderPlanCards(container);
+            } else {
+                renderPlanGrid(container);
+            }
+        }
+
+        function renderPlanCards(container) {
+            let html = '';
+            state.plan.weeks.forEach(week => {
+                const badgeClass = week.isDeload ? 'deload' : 'normal';
+                html += `<div style="margin-bottom: 24px;">`;
+                html += `<div style="margin-bottom: 10px;"><span class="week-badge ${badgeClass}">Week ${week.week}${week.isDeload ? ' — Deload' : ''}</span></div>`;
+
+                week.days.forEach(day => {
+                    const borderColor = day.type === 'run' ? 'var(--green)' : day.type === 'rest' ? 'var(--text-dim)' : 'var(--orange)';
+                    html += `<div style="background:var(--surface2); border-left:3px solid ${borderColor}; border-radius:8px; padding:12px; margin-bottom:8px;">`;
+                    html += `<div style="font-weight:600; font-size:13px; margin-bottom:8px;">${day.dayName}</div>`;
+
+                    day.workouts.forEach(w => {
+                        html += `<div style="font-size:12px; font-family:var(--mono); padding:4px 0; color:var(--text-dim);">`;
+                        html += `<span style="color:var(--accent-light);">${w.name || ''}</span> `;
+                        if (w.sets) html += `${w.sets}×${w.reps} @ ${w.weight} `;
+                        if (w.distance) html += `${w.distance} ${w.pace || ''} `;
+                        if (w.notes) html += `<span style="opacity:0.7">${w.notes}</span>`;
+                        html += `</div>`;
+                    });
+
+                    html += `</div>`;
+                });
+
+                html += `</div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function renderPlanGrid(container) {
             let html = '<table><thead><tr><th>Wk</th><th>Day</th><th>Exercise</th><th>Rx</th></tr></thead><tbody>';
 
             state.plan.weeks.forEach(week => {
@@ -929,7 +971,7 @@
             });
 
             html += '</tbody></table>';
-            document.getElementById('planTable').innerHTML = html;
+            container.innerHTML = html;
         }
 
         // ---- WEEKLY VIEW ----
