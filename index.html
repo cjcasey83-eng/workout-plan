@@ -578,6 +578,7 @@
                     <button class="btn btn-sync" onclick="syncToSheets()">↑ Push to Sheets</button>
                     <button class="btn btn-sync" onclick="loadFromSheets()">↓ Pull from Sheets</button>
                     <button class="btn btn-ghost" onclick="testConnection()">Test Connection</button>
+                    <button class="btn btn-danger" onclick="freshRegenerate()">Clear & Regenerate</button>
                 </div>
                 <div id="syncLog" style="margin-top: 20px; font-size: 12px; font-family: var(--mono); color: var(--text-dim);"></div>
             </div>
@@ -1208,6 +1209,25 @@
                 appendSyncLog('✗ Pull failed: ' + err.message);
                 toast('Pull failed.', 'error');
             }
+        }
+
+        // ---- FRESH REGENERATE ----
+        function freshRegenerate() {
+            if (!confirm('This will clear Sheets data and regenerate a fresh plan locally. Continue?')) return;
+            
+            // Clear local plan and misses
+            state.plan = null;
+            state.misses = {};
+            saveLocal();
+            
+            // Regenerate fresh plan
+            generatePlan();
+            
+            // Force immediate push to overwrite corrupted Sheets data
+            autoSyncToSheets();
+            
+            toast('Fresh plan generated and pushed to Sheets.', 'success');
+            appendSyncLog('✓ Fresh regeneration complete. Corrupted data overwritten.');
         }
 
         // ---- UTILITIES ----
